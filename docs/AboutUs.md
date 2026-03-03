@@ -11,6 +11,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
+### Zhou Jinhao
+
+<img src="images/chulan142857.png" width="200px">
+
+[[github](http://github.com/chulan142857)]
 ### Debopam Roy
 
 <img src="images/debopamroy1.png" width="200px">
@@ -19,7 +24,6 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Developer
 * Responsibilities: Data
-
 
 ### Manya Agarwal
 
