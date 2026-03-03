@@ -16,6 +16,20 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 <img src="images/chulan142857.png" width="200px">
 
 [[github](http://github.com/chulan142857)]
+### Debopam Roy
+
+<img src="images/debopamroy1.png" width="200px">
+
+[[github](https://github.com/DebopamRoy1)]
 
 * Role: Developer
-* Responsibilities: UI
+* Responsibilities: Data
+
+### Manya Agarwal
+
+<img src="images/15-manya.png" width="200px">
+
+[[github](https://github.com/15-Manya)]
+
+- Role: Team Lead
+- Responsibilities: Responsible for overall project coordination.
