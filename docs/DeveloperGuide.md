@@ -332,8 +332,12 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1.  Should work on any _mainstream OS_ as long as it has Java `17` or above installed.
 2.  Should be able to hold up to 1000 persons without a noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
+4.  Any data entered should be saved locally to a human-readable text file automatically after every valid command execution.
+5.  The system should provide clear, user-friendly error messages when invalid command formats are entered instead of terminating or crashing.
+6.  The system should respond to any search or filtering command within 500 milliseconds even when the database is at maximum capacity (1000 persons).
+7.  The software should be delivered as a single JAR file that does not require an installer.
+8.  The system is only required to support 8-digit Singaporean phone numbers and standard international email formats for participant contact details.
 
-*{More to be added}*
 
 ### Glossary
 
