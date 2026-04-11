@@ -1,0 +1,283 @@
+{
+  "enableSearch": true,
+  "pages": [
+    {
+      "src": "AboutUs.md",
+      "title": "About Us",
+      "headings": {
+        "about-us": "About Us",
+        "project-team": "Project team",
+        "anugrah-bagla": "Anugrah Bagla",
+        "zhou-jinhao": "Zhou Jinhao",
+        "debopam-roy": "Debopam Roy",
+        "han-shangda": "Han Shangda",
+        "manya-agarwal": "Manya Agarwal"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Configuration.md",
+      "title": "Configuration guide",
+      "headings": {
+        "configuration-guide": "Configuration guide"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "DevOps.md",
+      "title": "DevOps guide",
+      "headings": {
+        "devops-guide": "DevOps guide",
+        "build-automation": "Build automation",
+        "continuous-integration-ci": "Continuous integration (CI)",
+        "code-coverage": "Code coverage",
+        "repository-wide-checks": "Repository-wide checks",
+        "making-a-release": "Making a release"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "DeveloperGuide.md",
+      "title": "Developer Guide",
+      "headings": {
+        "ab-3-developer-guide": "AB-3 Developer Guide",
+        "setting-up-getting-started": "Setting up, getting started",
+        "design": "Design",
+        "architecture": "Architecture",
+        "ui-component": "UI component",
+        "logic-component": "Logic component",
+        "model-component": "Model component",
+        "storage-component": "Storage component",
+        "common-classes": "Common classes",
+        "implementation": "Implementation",
+        "add-event-feature": "Add Event Feature",
+        "add-participant-feature": "Add Participant Feature",
+        "edit-participant-feature": "Edit Participant Feature",
+        "filter-participants": "Filter participants",
+        "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
+        "proposed-data-archiving": "[Proposed] Data archiving",
+        "documentation-logging-testing-configuration-dev-ops": "Documentation, logging, testing, configuration, dev-ops",
+        "acknowledgements": "Acknowledgements",
+        "anugrah-bagla": "Anugrah Bagla",
+        "zhou-jinhao": "Zhou Jinhao",
+        "debopam-roy": "Debopam Roy",
+        "han-shangda": "Han Shangda",
+        "manya-agarwal": "Manya Agarwal",
+        "appendix-requirements": "Appendix: Requirements",
+        "product-scope": "Product scope",
+        "user-stories": "User stories",
+        "use-cases": "Use cases",
+        "non-functional-requirements": "Non-Functional Requirements",
+        "glossary": "Glossary",
+        "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",
+        "launch-and-shutdown": "Launch and shutdown",
+        "deleting-a-participant": "Deleting a participant",
+        "filtering-participants": "Filtering participants",
+        "saving-data": "Saving data"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Documentation.md",
+      "title": "Documentation guide",
+      "headings": {
+        "documentation-guide": "Documentation Guide"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Logging.md",
+      "title": "Logging guide",
+      "headings": {
+        "logging-guide": "Logging guide"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "SettingUp.md",
+      "title": "Setting up and getting started",
+      "headings": {
+        "setting-up-and-getting-started": "Setting up and getting started",
+        "setting-up-the-project-in-your-computer": "Setting up the project in your computer",
+        "before-writing-code": "Before writing code"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Testing.md",
+      "title": "Testing guide",
+      "headings": {
+        "testing-guide": "Testing guide",
+        "running-tests": "Running tests",
+        "types-of-tests": "Types of tests"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UG.md",
+      "title": "User Guide",
+      "headings": {
+        "teameventpro-user-guide": "TeamEventPro User Guide",
+        "1-about-teameventpro": "1. About TeamEventPro",
+        "2-understanding-app-modes": "2. Understanding App Modes",
+        "2-1-outside-an-event": "2.1 Outside an event",
+        "2-2-inside-an-event": "2.2 Inside an event",
+        "3-commands-available-in-both-modes": "3. Commands Available in Both Modes",
+        "4-next-sections": "4. Next Sections"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuide.md",
+      "headings": {
+        "layout-default-md-title-and-quot-user-guide-and-quot-pagenav-3": "layout: default.md\ntitle: &quot;User Guide&quot;\npageNav: 3",
+        "teameventpro-user-guide": "TeamEventPro User Guide",
+        "teameventpro-is-a-desktop-app-for-managing-tech-meetup-attendees-optimized-for-use-via-a-command-line-interface-cli-while-still-having-the-benefits-of-a-graphical-user-interface-gui-if-you-can-type-fast-teameventpro-can-get-your-event-management-tasks-done-faster-than-traditional-gui-apps": "TeamEventPro is a desktop app for managing tech meetup attendees,\noptimized for use via a Command Line Interface (CLI) while still having the benefits\nof a Graphical User Interface (GUI). If you can type fast, TeamEventPro can get\nyour event management tasks done faster than traditional GUI apps.",
+        "quick-start": "Quick start",
+        "features": "Features",
+        "viewing-help-help": "Viewing help : help",
+        "switching-theme-mode-switchmode": "Switching theme mode : switchmode",
+        "adding-an-event-addevent": "Adding an event : addevent",
+        "editing-an-event-editevent": "Editing an event : editevent",
+        "deleting-an-event-deleteevent": "Deleting an event : deleteevent",
+        "entering-an-event-enter": "Entering an event : enter",
+        "leaving-an-event-leave": "Leaving an event : leave",
+        "adding-an-applicant-add": "Adding an applicant: add",
+        "listing-all-events-or-applicants-list": "Listing all events or applicants : list",
+        "importing-applicants-from-csv-import": "Importing applicants from CSV : import",
+        "exporting-applicants-to-csv-export": "Exporting applicants to CSV : export",
+        "editing-an-applicant-edit": "Editing an applicant : edit",
+        "assigning-a-team-assign": "Assigning a team : assign",
+        "filtering-applicants-filter": "Filtering applicants : filter",
+        "checking-in-an-applicant-checkin": "Checking in an applicant : checkin",
+        "searching-events-or-applicants-search": "Searching events or applicants : search",
+        "deleting-an-applicant-delete": "Deleting an applicant : delete",
+        "clearing-all-entries-clear": "Clearing all entries : clear",
+        "exiting-the-program-exit": "Exiting the program : exit",
+        "saving-the-data": "Saving the data",
+        "editing-the-data-file": "Editing the data file",
+        "faq": "FAQ",
+        "known-issues": "Known issues",
+        "command-summary": "Command summary"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuideCommandFundamentals.md",
+      "title": "User Guide - Command Fundamentals",
+      "headings": {
+        "command-fundamentals": "Command Fundamentals",
+        "1-command-notation": "1. Command notation",
+        "2-command-structure-and-modes": "2. Command structure and modes",
+        "3-prefix-reference": "3. Prefix reference",
+        "4-index-and-list-behavior": "4. Index and list behavior",
+        "5-common-mistakes-and-quick-fixes": "5. Common mistakes and quick fixes",
+        "6-navigation": "6. Navigation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuideCommonCommands.md",
+      "title": "User Guide - Common Commands",
+      "headings": {
+        "common-commands": "Common Commands",
+        "1-commands-available-in-both-modes": "1. Commands Available in Both Modes",
+        "2-help-command": "2. Help command",
+        "format": "Format",
+        "example-usage": "Example Usage",
+        "successful-execution": "Successful Execution",
+        "notes": "Notes",
+        "3-list-command": "3. List command",
+        "format-2": "Format",
+        "example-usage-2": "Example Usage",
+        "successful-execution-2": "Successful Execution",
+        "notes-2": "Notes",
+        "4-search-command": "4. Search command",
+        "format-3": "Format",
+        "example-usage-3": "Example Usage",
+        "successful-execution-3": "Successful Execution",
+        "notes-3": "Notes",
+        "5-switch-mode-command": "5. Switch Mode command",
+        "format-4": "Format",
+        "example-usage-4": "Example Usage",
+        "successful-execution-4": "Successful Execution",
+        "notes-4": "Notes",
+        "6-navigation": "6. Navigation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuideEvents.md",
+      "title": "User Guide - Event Commands",
+      "headings": {
+        "event-commands": "Event Commands",
+        "1-event-creation-and-setup": "1. Event Creation and Setup",
+        "1-1-add-event-command": "1.1 Add Event command",
+        "2-event-maintenance": "2. Event Maintenance",
+        "2-1-edit-event-command": "2.1 Edit Event command",
+        "2-2-delete-event-command": "2.2 Delete Event command",
+        "3-event-navigation": "3. Event Navigation",
+        "3-1-enter-event-command": "3.1 Enter Event command",
+        "4-application-exit": "4. Application Exit",
+        "4-1-exit-command": "4.1 Exit command",
+        "5-navigation": "5. Navigation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuideGettingStarted.md",
+      "title": "User Guide - Getting Started",
+      "headings": {
+        "getting-started": "Getting Started",
+        "1-prerequisites": "1. Prerequisites",
+        "2-install-and-launch": "2. Install and launch",
+        "3-first-time-setup": "3. First-time setup",
+        "4-where-to-go-next": "4. Where to go next",
+        "5-navigation": "5. Navigation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuideParticipants.md",
+      "title": "User Guide - Participant Commands",
+      "headings": {
+        "participant-commands": "Participant Commands",
+        "1-participant-management": "1. Participant Management",
+        "1-1-add-command": "1.1 Add command",
+        "1-2-edit-command": "1.2 Edit command",
+        "1-3-delete-command": "1.3 Delete command",
+        "1-4-clear-command": "1.4 Clear command",
+        "2-team-and-attendance-management": "2. Team and Attendance Management",
+        "2-1-assign-team-command": "2.1 Assign Team command",
+        "2-2-check-in-command": "2.2 Check-In command",
+        "3-search-filtering-and-viewing": "3. Search, Filtering, and Viewing",
+        "3-1-filter-command": "3.1 Filter command",
+        "3-2-view-command": "3.2 View command",
+        "3-3-statistics-command": "3.3 Statistics command",
+        "4-import-and-export": "4. Import and Export",
+        "4-1-import-command": "4.1 Import command",
+        "4-2-export-command": "4.2 Export command",
+        "5-event-navigation": "5. Event Navigation",
+        "5-1-leave-event-command": "5.1 Leave Event command",
+        "6-navigation": "6. Navigation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "index.md",
+      "title": "",
+      "headings": {
+        "addressbook-level-3": "AddressBook Level-3"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "team/johndoe.md",
+      "title": "John Doe's Project Portfolio Page",
+      "headings": {
+        "project-addressbook-level-3": "Project: AddressBook Level 3"
+      },
+      "headingKeywords": {}
+    }
+  ]
+}
