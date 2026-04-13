@@ -65,16 +65,16 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/se-
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` that is made up of parts e.g.`CommandBox`, `ResultDisplay`, `PersonListPanel`, `StatusBarFooter` etc. All these, including the `MainWindow`, inherit from the abstract `UiPart` class which captures the commonalities between classes that represent parts of the visible GUI.
+The UI consists of a `MainWindow` that is made up of parts e.g. `CommandBox`, `ResultDisplay`, `PersonListPanel`, `EventListPanel`, `StatisticsPanel`, `StatusBarFooter` etc. All these, including the `MainWindow`, inherit from the abstract `UiPart` class which captures the commonalities between classes that represent parts of the visible GUI.
 
-The `UI` component uses the JavaFx UI framework. The layout of these UI parts are defined in matching `.fxml` files that are in the `src/main/resources/view` folder. For example, the layout of the [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java) is specified in [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml)
+The `UI` component uses the JavaFx UI framework. The layout of these UI parts are defined in matching `.fxml` files that are in the `src/main/resources/view` folder. For example, the layout of the [`MainWindow`](https://github.com/AY2526S2-CS2103T-W11-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java) is specified in [`MainWindow.fxml`](https://github.com/AY2526S2-CS2103T-W11-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
 
 The `UI` component,
 
 * executes user commands using the `Logic` component.
 * listens for changes to `Model` data so that the UI can be updated with the modified data.
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component, as it displays `Person` object residing in the `Model`.
+* depends on some classes in the `Model` component, as it displays `Person` and `Event` objects residing in the `Model`.
 
 ### Logic component
 
@@ -146,8 +146,8 @@ The `Model` component,
 <puml src="diagrams/StorageClassDiagram.puml" width="550" />
 
 The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* inherits from both `AddressBookStorage` and `UserPrefStorage`, which means it can be treated as either one (if only the functionality of only one is needed).
+* can save address book data, event book data, and user preference data in JSON format, and read them back into corresponding objects.
+* inherits from `AddressBookStorage`, `EventBookStorage`, and `UserPrefsStorage`, which means it can be treated as any one of them when only one storage responsibility is needed.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -233,6 +233,49 @@ The sequence diagram below illustrates the interactions within the `Logic` compo
 * **Alternative 2:** Phone or email alone (without name).
     * Pros: More reliable since phone numbers and emails are globally unique.
     * Cons: Would reject a shared office phone number used by two different participants.
+
+---
+
+### Check-In Feature
+
+#### Implementation
+
+The check-in feature is facilitated by `CheckInCommand`. It allows the user to mark a participant in the currently active event as checked in.
+
+The command follows these steps when executed:
+
+1. `AddressBookParser` receives the input and creates a `CheckInCommandParser`.
+2. `CheckInCommandParser` tokenises the input and parses the preamble into an `Index`.
+3. `CheckInCommand#execute()` checks that the app is currently in event participant mode. If not, a `CommandException` is thrown.
+4. The target `Person` is retrieved from the filtered participant list using the parsed index. If the index is out of bounds, a `CommandException` is thrown.
+5. `Model#checkInPerson()` is called to update the participant's attendance status in the active event.
+6. A `CommandResult` with the formatted success message is returned using `Messages#format()`.
+
+The class diagram below summarizes the main classes involved in parsing and executing the `checkin` command.
+
+<puml src="diagrams/CheckInCommandClassDiagram.puml" alt="Main classes involved in the check-in command" width="650" />
+
+The sequence diagram below illustrates the interactions within the `Logic` component when the user executes `checkin 1`.
+
+<puml src="diagrams/CheckInCommandSequenceDiagram.puml" alt="Sequence diagram for the check-in command" width="720" />
+
+#### Design Considerations
+
+**Aspect: How the target participant is identified:**
+
+* **Current choice:** Use the participant index from the currently displayed list.
+    * Pros: Consistent with other participant-level commands such as `edit`, `delete`, and `assign`.
+    * Cons: Users must be careful that filtered lists can change the visible index ordering.
+
+* **Alternative:** Check in a participant by a unique field such as email.
+    * Pros: Avoids index ambiguity after filtering or reordering.
+    * Cons: More typing and less consistent with the rest of the participant command set.
+
+**Aspect: Where the attendance update happens:**
+
+* **Current choice:** Delegate the actual status update to `Model#checkInPerson()`.
+    * Pros: Keeps `CheckInCommand` focused on command orchestration and validation.
+    * Cons: Requires readers to follow the call into the model layer to see the final state update.
 
 ---
 
@@ -330,103 +373,69 @@ Failure paths:
   * Pros: reusable predicate type with a single execution path in `FilterCommand`.
   * Cons: extra predicate flexibility is not exposed to users under the current single-criterion command syntax.
 
-### \[Proposed\] Undo/redo feature
+### Search Feature
 
-#### Proposed Implementation
+#### Implementation
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
+The search feature is facilitated by `SearchCommand`. It supports dual behaviour based on the current app context:
 
-* `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
+* In the global event view, it filters the event list using `EventMatchesKeywordsPredicate`.
+* In event participant mode, it filters the participant list using `NameContainsKeywordsPredicate`.
 
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
+The command follows these steps when executed:
 
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
+1. `AddressBookParser` receives the input and creates a `SearchCommandParser`.
+2. `SearchCommandParser` trims and validates the arguments. If the user provides no keyword, a `ParseException` is thrown.
+3. `SearchCommandParser` splits the input into keywords and constructs a `SearchCommand`.
+4. `SearchCommand#execute()` checks `model.isInEventParticipantsMode()`.
+5. If the app is in event participant mode, `SearchCommand` applies `NameContainsKeywordsPredicate` through `Model#updateFilteredPersonList(...)`.
+6. Otherwise, it applies `EventMatchesKeywordsPredicate` through `Model#updateFilteredEventList(...)`.
+7. A `CommandResult` is returned using the size of the currently filtered list for user feedback.
 
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
+<puml src="diagrams/SearchCommandSequenceDiagram.puml" width="760" alt="Sequence diagram for search command" />
 
-<puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
+#### Design considerations
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+**Aspect: Reusing one command word across two contexts**
+* **Current choice:** `search` changes target based on whether the user is currently inside an event.
+  * Pros: keeps the command set small and consistent across the app.
+  * Cons: requires users to understand the current app context before predicting the result.
 
-<puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
+**Aspect: Predicate choice**
+* **Current choice:** event search and participant search use separate predicate classes.
+  * Pros: keeps matching logic close to the corresponding domain model.
+  * Cons: shared matching behaviour, such as case-insensitive substring matching, is duplicated across predicate implementations.
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+### List Feature
 
-<puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
+#### Implementation
 
-<box type="info" seamless>
+The list feature is facilitated by `ListCommand`. Like `search`, it is context-aware:
 
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
+* In the global event view, it resets the event list to show all events.
+* In event participant mode, it resets the participant list to show all participants in the current event.
 
-</box>
+The command follows these steps when executed:
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+1. `AddressBookParser` validates that `list` is used without extra arguments and constructs a `ListCommand` directly.
+2. `ListCommand#execute()` checks `model.isInEventParticipantsMode()`.
+3. If the app is in event participant mode, `ListCommand` calls `Model#updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS)`.
+4. Otherwise, it calls `Model#updateFilteredEventList(Model.PREDICATE_SHOW_ALL_EVENTS)`.
+5. A `CommandResult` with the appropriate success message is returned.
 
-<puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
+<puml src="diagrams/ListCommandSequenceDiagram.puml" width="720" alt="Sequence diagram for list command" />
 
+#### Design considerations
 
-<box type="info" seamless>
+**Aspect: Resetting filtered views**
+* **Current choice:** `list` always restores the full list for the current context instead of preserving previous filters.
+  * Pros: provides a quick and predictable way to clear `search` results and return to the full list.
+  * Cons: users cannot recover a previous filtered state after issuing `list`.
 
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</box>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-<puml src="diagrams/UndoSequenceDiagram-Logic.puml" alt="UndoSequenceDiagram-Logic" />
-
-<box type="info" seamless>
-
-**Note:** The lifeline for `UndoCommand` should end at the destroy marker (X) but due to a limitation of PlantUML, the lifeline reaches the end of diagram.
-
-</box>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-<puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</box>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-<puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-<puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo executes:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command are correct.
-
-_{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
+**Aspect: Using one command for both events and participants**
+* **Current choice:** the same `list` command is used in both app contexts.
+  * Pros: reduces command memorisation and aligns with the app's event-first workflow.
+  * Cons: the success message and visible result depend on context, which may surprise first-time users.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -443,16 +452,37 @@ _{Explain here how the data archiving feature will be implemented}_
 ## **Acknowledgements**
 
 ### Anugrah Bagla
-
+Used Cursor and Codex for 
+* Understanding the codebase to implement features.
+* Design multiple features such as `enter event`, `checkin` etc.
+* Writing test cases for the features.
+* Debugging errors.
 
 ### Zhou Jinhao
 
+Used Cursor (auto mode) for:
+* Implementing the `assign-team` feature.
+* Implementing `import` and `export` features.
+* Implementing the real-time search feature.
+* Debugging issues and performing error checking.
+* Reviewing code and documentation quality.
+
 
 ### Debopam Roy
-
+Used Claude (Claude Code) for:
+* Understanding the codebase architecture while implementing the addevent, add participant, and edit participant commands.
+* Designing and refining the duplicate participant detection logic (Person#isSamePerson()).
+* Debugging issues and performing error checking, including Checkstyle violations and failing unit tests.
+* Reviewing code and documentation quality, including alpha testing bugs and peer PR code reviews.
 
 ### Han Shangda
 
+Used codex/cursor to support selected development and documentation tasks, including:
+* refining the User Guide and Developer Guide wording and structure.
+* checking the behavior of commands such as `list`, `search`, `switchtheme`, `editevent`, and `deleteevent`.
+* identifying possible edge cases, error-message issues, and documentation inconsistencies.
+* assisting with test checking, bug investigation, and troubleshooting during implementation.
+All AI-assisted output was reviewed, edited, and verified before being included in the final submission.
 
 ### Manya Agarwal
 
@@ -471,15 +501,14 @@ Used Cursor (auto mode) for:
 
 **Target user profile**:
 
-* Tech meetup organizers managing small-to-medium events (20–150 participants) in Singapore
-* Manages multiple events per month with varying participant lists
-* Needs to perform live check-ins and track real-time attendance during events
-* Prefers desktop applications for stability and offline capability during events
-* Types fast and prefers keyboard shortcuts over mouse navigation
-* Comfortable with command-line interfaces and text-based input
-* Requires instant filtering and searching capabilities (by RSVP, attendance, team, dietary needs)
-* Manages hackathon team assignments and participant skill tracking
-* Values data accuracy and quick error correction during live events
+* Tech meetup organizers managing small-to-medium events (20–150 participants).
+* Manages multiple events per month with varying participant lists.
+* Needs to perform live check-ins and track real-time attendance during events.
+* Prefers desktop applications for stability and offline capability during events.
+* Types fast and prefers keyboard shortcuts over mouse navigation.
+* Requires instant filtering and searching capabilities (by RSVP, attendance, team, dietary needs).
+* Manages hackathon team assignments and participant skill tracking.
+* Values data accuracy and quick error correction during live events.
 
 **Value proposition**:
 
@@ -672,80 +701,514 @@ testers are expected to do more *exploratory* testing.
 
 1. Initial launch
 
-   1. Download the jar file and copy into an empty folder
+    1. Download the jar file and copy into an empty folder.
 
-   1. Double-click the jar file Expected: Shows the GUI with a set of sample events. The window size may not be optimum.
+    1. Double-click the jar file.<br>
+       Expected: Shows the GUI with a set of sample events. The window size may not be optimum.
 
 1. Saving window preferences
 
-   1. Resize the window to an optimum size. Move the window to a different location. Close the window.
+    1. Resize the window to an optimum size. Move the window to a different location. Close the window.
 
-   1. Re-launch the app by double-clicking the jar file.<br>
+    1. Re-launch the app by double-clicking the jar file.<br>
        Expected: The most recent window size and location is retained.
 
-1. _{ more test cases …​ }_
+---
+
+### Adding an event
+
+1. Adding a valid event while in the global event view
+
+    1. Prerequisites: Launch the app. Stay in the global event view (do not enter any event).
+
+    1. Test case: `addevent n/Tech Meetup d/2025-06-15`<br>
+       Expected: New event added to the event list. Success message shows the event name, date, and empty location/description.
+
+    1. Test case: `addevent n/Workshop d/2025-07-01 l/NUS Deck desc/Annual hackathon kickoff`<br>
+       Expected: Event added with all fields shown in the success message.
+
+    1. Test case: `addevent n/Tech Meetup d/2025-06-15` (duplicate of the first event added above)<br>
+       Expected: Error message indicating a duplicate event already exists. No event added.
+
+1. Invalid addevent inputs
+
+    1. Test case: `addevent` (no fields)<br>
+       Expected: Error with usage instructions shown.
+
+    1. Test case: `addevent n/ d/2025-06-15` (blank name)<br>
+       Expected: Error indicating name constraints.
+
+    1. Test case: `addevent n/Tech Meetup d/not-a-date`<br>
+       Expected: Error indicating invalid date format.
+
+1. Adding an event while inside an event participant view
+
+    1. Prerequisites: Enter an event first using `enter event 1`.
+
+    1. Test case: `addevent n/New Event d/2025-08-01`<br>
+       Expected: Command fails with a message indicating to leave the current event first.
+
+---
+
+### Editing an event
+
+1. Editing an event while in the global event view
+
+    1. Prerequisites: At least one event in the event list. Stay in the global event view.
+
+    1. Test case: `editevent 1 n/Renamed Event`<br>
+       Expected: First event's name is updated. Success message shows the updated event details.
+
+    1. Test case: `editevent 1 l/Marina Bay Sands desc/Updated description`<br>
+       Expected: Location and description updated for the first event.
+
+    1. Test case: `editevent 0 n/Invalid`<br>
+       Expected: Error message. No event edited.
+
+    1. Other incorrect inputs: `editevent` (no index), `editevent x n/Test` where x is larger than the list size.<br>
+       Expected: Error message shown.
+
+---
+
+### Deleting an event
+
+1. Deleting an event while in the global event view
+
+    1. Prerequisites: At least one event in the event list. Stay in the global event view.
+
+    1. Test case: `deleteevent 1`<br>
+       Expected: First event deleted. Success message shown.
+
+    1. Test case: `deleteevent 0`<br>
+       Expected: Error message. No event deleted.
+
+    1. Other incorrect inputs: `deleteevent`, `deleteevent x` where x is larger than the list size.<br>
+       Expected: Error message shown.
+
+1. Deleting an event while inside an event participant view
+
+    1. Prerequisites: Enter an event using `enter event 1`.
+
+    1. Test case: `deleteevent 1`<br>
+       Expected: Command fails with a message indicating to leave the current event first.
+
+---
+
+### Entering and leaving an event
+
+1. Entering an event
+
+    1. Prerequisites: At least one event in the event list. Stay in the global event view.
+
+    1. Test case: `enter event 1`<br>
+       Expected: App switches to event participant view for the first event. Participant list for that event is shown.
+
+    1. Test case: `enter event 0`<br>
+       Expected: Error message. App remains in global event view.
+
+    1. Test case: `enter event x` where x is larger than the event list size.<br>
+       Expected: Error message. App remains in global event view.
+
+1. Leaving an event
+
+    1. Prerequisites: Must be inside an event participant view.
+
+    1. Test case: `leave`<br>
+       Expected: App returns to the global event view. Event list is shown.
+
+    1. Test case: `leave` while already in global event view<br>
+       Expected: Error message indicating not currently inside an event.
+
+---
+
+### Adding a participant
+
+1. Adding a valid participant while inside an event
+
+    1. Prerequisites: Enter an event using `enter event 1`.
+
+    1. Test case: `add n/John Doe p/98765432 e/johnd@example.com a/311 Clementi Ave`<br>
+       Expected: Participant added. Success message shows all participant fields.
+
+    1. Test case: `add n/Mary Jane p/91234567 e/mary@example.com a/Blk 30 Geylang St r/yes t/python tm/Alpha g/maryjane`<br>
+       Expected: Participant added with all optional fields. RSVP shown as `yes`, tag as `python`, team as `Alpha`.
+
+    1. Test case: Adding a participant with the same name and same phone number as an existing participant.<br>
+       Expected: Error message indicating a duplicate participant already exists.
+
+    1. Test case: Adding a participant with the same name and same email as an existing participant, but a different phone number.<br>
+       Expected: Error message indicating a duplicate participant already exists.
+
+    1. Test case: Adding a participant with the same name as an existing participant but different phone AND different email.<br>
+       Expected: Participant added successfully (same name but genuinely different contact details allowed).
+
+1. Name field constraints
+
+    1. Test case: `add n/José Martín p/91234567 e/jose@example.com a/123 Street` (Unicode name)<br>
+       Expected: Participant added successfully.
+
+    1. Test case: `add n/O'Brian p/91234567 e/obrian@example.com a/123 Street` (apostrophe in name)<br>
+       Expected: Participant added successfully.
+
+    1. Test case: `add n/s/o Kumar p/91234567 e/sku@example.com a/123 Street` (slash in name)<br>
+       Expected: Participant added successfully.
+
+    1. Test case: `add n/ p/91234567 e/test@example.com a/123 Street` (blank name)<br>
+       Expected: Error message with name constraints.
+
+1. Adding outside event participant view
+
+    1. Prerequisites: Stay in the global event view.
+
+    1. Test case: `add n/John Doe p/98765432 e/johnd@example.com a/311 Clementi Ave`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Editing a participant
+
+1. Editing a participant while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `edit 1 p/91112222`<br>
+       Expected: First participant's phone updated. Success message shows updated participant details.
+
+    1. Test case: `edit 1 n/New Name e/new@example.com`<br>
+       Expected: Name and email updated for the first participant.
+
+    1. Test case: `edit 1 t/` (clear all tags)<br>
+       Expected: All tags removed from the first participant.
+
+    1. Test case: `edit 1 tm/` (clear team)<br>
+       Expected: Team field cleared for the first participant.
+
+    1. Test case: `edit 1` (no fields specified)<br>
+       Expected: Error message indicating at least one field must be provided.
+
+    1. Test case: `edit 0 n/Test`<br>
+       Expected: Error message. No participant edited.
+
+1. Editing to create a duplicate
+
+    1. Prerequisites: At least two participants in the event.
+
+    1. Test case: Edit participant 2 to have the same name and phone number as participant 1.<br>
+       Expected: Error message indicating duplicate participant. No changes applied.
+
+---
 
 ### Deleting a participant
 
 1. Deleting a participant while all participants are being shown
 
-   1. Prerequisites: Enter an event so the participant list is shown. Multiple participants in the current event list.
+    1. Prerequisites: Enter an event so the participant list is shown. Multiple participants in the current event list.
 
-   1. Test case: `delete 1`<br>
-      Expected: The first participant is deleted from the list. Details of the deleted participant are shown in the status message. Timestamp in the status bar is updated.
+    1. Test case: `delete 1`<br>
+       Expected: The first participant is deleted from the list. Details of the deleted participant are shown in the status message.
 
-   1. Test case: `delete 0`<br>
-      Expected: No participant is deleted. Error details shown in the status message. Status bar remains the same.
+    1. Test case: `delete 0`<br>
+       Expected: No participant is deleted. Error details shown in the status message.
 
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
+    1. Other incorrect delete commands to try: `delete`, `delete x` (where x is larger than the list size).<br>
+       Expected: Error message shown.
 
-1. _{ more test cases …​ }_
+---
+
+### Assigning a team
+
+1. Assigning a team while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `assign 1 team/Alpha`<br>
+       Expected: First participant assigned to team `Alpha`. Success message shown.
+
+    1. Test case: `assign 1 team/` (clear team)<br>
+       Expected: Team cleared for the first participant.
+
+    1. Test case: `assign 0 team/Alpha`<br>
+       Expected: Error message. No assignment made.
+
+    1. Test case: `assign 1 team/ThisTeamNameIsTooLong` (team name over 15 characters)<br>
+       Expected: Error message indicating team name constraints.
+
+---
+
+### Checking in a participant
+
+1. Checking in while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `checkin 1`<br>
+       Expected: First participant marked as checked in. Success message shown. Check-in status updated in the participant card.
+
+    1. Test case: `checkin 0`<br>
+       Expected: Error message. No check-in performed.
+
+---
+
+### Viewing a participant
+
+1. Viewing participant details while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `view 1`<br>
+       Expected: Full details of the first participant displayed in the detail panel, including all fields (name, phone, email, address, GitHub, team, RSVP, tags, check-in status).
+
+    1. Test case: `view 0`<br>
+       Expected: Error message. No participant details shown.
+
+    1. Test case: `view x` where x is larger than the list size.<br>
+       Expected: Error message shown.
+
+1. Viewing after filtering
+
+    1. Prerequisites: Apply a filter first (e.g. `filter r/yes`), then run `view 1`.
+
+    1. Test case: `view 1`<br>
+       Expected: Details of the first participant in the *filtered* list are shown (not the first participant of the full list).
+
+---
+
+### Searching
+
+1. Searching in the global event view
+
+    1. Prerequisites: Stay in the global event view with at least a few events.
+
+    1. Test case: `search tech` (assuming an event with "tech" in the name exists)<br>
+       Expected: Event list filtered to show only events whose name matches "tech". Status message shows count.
+
+    1. Test case: `search` (no keywords)<br>
+       Expected: Error message with usage instructions shown.
+
+1. Searching inside an event participant view
+
+    1. Prerequisites: Enter an event with multiple participants.
+
+    1. Test case: `search John`<br>
+       Expected: Participant list filtered to show only participants matching "John". Status message shows count.
+
+    1. Test case: `search john doe` (multiple keywords)<br>
+       Expected: Participants matching either "john" or "doe" are shown.
+
+    1. Test case: `list` after a search.<br>
+       Expected: Full list restored.
+
+---
 
 ### Filtering participants
 
 1. Filtering while inside an event
 
-   1. Prerequisites: Launch the app, select an event with `enter event INDEX` so the participant list is shown. Ensure the list has a mix of RSVP values, tags, team assignments, and check-in states (use sample data or add/edit participants as needed).
+    1. Prerequisites: Enter an event with participants that have a mix of RSVP values, tags, team assignments, and check-in states.
 
-   1. Test case: `filter r/yes`<br>
-      Expected: Only participants whose RSVP is “yes” remain visible; the status message shows how many persons are listed; list updates immediately.
+    1. Test case: `filter r/yes`<br>
+       Expected: Only participants with RSVP `yes` shown. Status message shows count.
 
-   1. Test case: `filter t/` followed by a tag that at least one participant has (e.g. `filter t/python` if such a tag exists).<br>
-      Expected: Only participants with that tag are shown; count in the message matches the visible list.
+    1. Test case: `filter r/no`<br>
+       Expected: Only participants with RSVP `no` shown.
 
-   1. Test case: `filter team/TEAMNAME` where `TEAMNAME` matches an assigned team.<br>
-      Expected: Only participants on that team are shown.
+    1. Test case: `filter r/pending`<br>
+       Expected: Only participants with RSVP `pending` shown.
 
-   1. Test case: `filter checkin/yes` or `filter checkin/no` (values as supported by the app).<br>
-      Expected: List narrows to checked-in or not checked-in participants accordingly.
+    1. Test case: `filter t/python` (assuming a participant with tag `python` exists)<br>
+       Expected: Only participants with that tag shown.
 
-   1. Test case: `list` after a successful filter.<br>
-      Expected: Full participant list for the current event is shown again (filter predicate cleared as per normal `list` behavior).
+    1. Test case: `filter team/Alpha` (assuming a participant assigned to `Alpha` exists)<br>
+       Expected: Only participants on team `Alpha` shown.
 
-1. Invalid filter input
+    1. Test case: `filter checkin/yes`<br>
+       Expected: Only checked-in participants shown.
 
-   1. Prerequisites: Same as above—must be inside an event with participants listed.
+    1. Test case: `filter checkin/no`<br>
+       Expected: Only participants not checked in shown.
 
-   1. Test case: `filter` with no arguments, or with two criteria in one command (e.g. `filter r/yes t/python`).<br>
-      Expected: No change to the filtered list (or error message); user sees invalid command / usage feedback.
+    1. Test case: `list` after a filter.<br>
+       Expected: Full participant list restored.
 
-   1. Test case: `filter r/invalid` (or other malformed RSVP value).<br>
-      Expected: Parse error; list unchanged.
+1. Invalid filter inputs
 
-1. Filtering without entering an event first
+    1. Test case: `filter` (no arguments)<br>
+       Expected: Error message with usage instructions.
 
-   1. Prerequisites: Launch the app but do **not** run `enter event`; stay in the global event view.
+    1. Test case: `filter r/yes t/python` (two criteria)<br>
+       Expected: Error message. Only one filter criterion allowed per command.
 
-   1. Test case: `filter r/yes`<br>
-      Expected: Command fails with a message indicating the user must enter an event first; participant list not updated.
+    1. Test case: `filter r/invalid`<br>
+       Expected: Error message indicating invalid RSVP value.
 
-1. _{ more test cases …​ }_
+1. Filtering outside event participant view
+
+    1. Prerequisites: Stay in global event view.
+
+    1. Test case: `filter r/yes`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Viewing statistics
+
+1. Viewing statistics while inside an event
+
+    1. Prerequisites: Enter an event with participants having varied RSVP, check-in, and team data.
+
+    1. Test case: `statistics`<br>
+       Expected: Statistics panel displayed showing RSVP breakdown, check-in counts, and team distribution.
+
+    1. Test case: `statistics abc` (extra arguments)<br>
+       Expected: Error message. Statistics not shown.
+
+1. Viewing statistics on an empty participant list
+
+    1. Prerequisites: Enter an event with no participants (or `clear` all participants first).
+
+    1. Test case: `statistics`<br>
+       Expected: Statistics panel shown with zero counts across all categories.
+
+1. Viewing statistics outside event participant view
+
+    1. Prerequisites: Stay in global event view.
+
+    1. Test case: `statistics`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Clearing all participants
+
+1. Clearing while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `clear`<br>
+       Expected: All participants removed from the current event. Success message shown.
+
+    1. Test case: `clear abc` (extra arguments)<br>
+       Expected: Error message. No participants cleared.
+
+1. Clearing outside event participant view
+
+    1. Prerequisites: Stay in global event view.
+
+    1. Test case: `clear`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Importing participants from CSV
+
+1. Importing a valid CSV file
+
+    1. Prerequisites: Enter an event. Prepare a CSV file at a known path (e.g. `data/participants.csv`) with valid participant data.
+
+    1. Test case: `import data/participants.csv`<br>
+       Expected: Participants from the CSV added to the current event. Success message shows number of participants imported.
+
+    1. Test case: `import list`<br>
+       Expected: A list of previously imported files shown (or an empty list if none).
+
+1. Importing an invalid or missing file
+
+    1. Test case: `import data/nonexistent.csv`<br>
+       Expected: Error message indicating file not found.
+
+    1. Test case: `import` (no path)<br>
+       Expected: Error message with usage instructions.
+
+1. Importing outside event participant view
+
+    1. Prerequisites: Stay in global event view.
+
+    1. Test case: `import data/participants.csv`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Exporting participants to CSV
+
+1. Exporting while inside an event
+
+    1. Prerequisites: Enter an event with at least one participant.
+
+    1. Test case: `export data/exports/output.csv`<br>
+       Expected: CSV file created at the specified path. Success message shown. Open the file to verify participant data is correct.
+
+    1. Test case: `export` (no path — uses default path if supported)<br>
+       Expected: File exported to default location. Success message shown.
+
+1. Exporting outside event participant view
+
+    1. Prerequisites: Stay in global event view.
+
+    1. Test case: `export data/exports/output.csv`<br>
+       Expected: Command fails with a message indicating to enter an event first.
+
+---
+
+### Single-word utility commands
+
+1. List command
+
+    1. Test case: `list` in global event view.<br>
+       Expected: Full event list shown.
+
+    1. Test case: `list` inside an event participant view.<br>
+       Expected: Full participant list for the current event shown.
+
+    1. Test case: `list abc` (extra arguments)<br>
+       Expected: Error message. List not executed.
+
+1. Help command
+
+    1. Test case: `help`<br>
+       Expected: Help window opened showing a link to the user guide.
+
+    1. Test case: `help abc` (extra arguments)<br>
+       Expected: Error message. Help window not opened.
+
+1. Switch theme command
+
+    1. Test case: `switchtheme dark`<br>
+       Expected: App theme switches to dark mode.
+
+    1. Test case: `switchtheme light`<br>
+       Expected: App theme switches to light mode.
+
+    1. Test case: `switchtheme invalid`<br>
+       Expected: Error message indicating valid values are `dark` or `light`.
+
+---
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+1. Automatic saving after commands
 
-   1. _{explain how to simulate a missing/corrupted file, and the expected behavior}_
+    1. Prerequisites: Add a new event or participant.
 
-1. _{ more test cases …​ }_
+    1. Close the app and re-launch it.<br>
+       Expected: The newly added event or participant is still present. All data persisted automatically.
+
+1. Dealing with a missing data file
+
+    1. Navigate to the `data/` folder and delete `eventbook.json`.
+
+    1. Re-launch the app.<br>
+       Expected: App launches with the default sample data restored.
+
+1. Dealing with a corrupted data file
+
+    1. Open `data/eventbook.json` in a text editor and introduce invalid JSON (e.g. delete a closing brace).
+
+    1. Re-launch the app.<br>
+       Expected: App launches with an empty event list and a warning that the data file was corrupted.
+
+1. Dealing with a corrupted addressbook file
+
+    1. Enter an event and note which folder the participant data is stored in. Open the corresponding `addressbook.json` and corrupt it similarly.
+
+    1. Re-launch the app and enter the same event.<br>
+       Expected: Participant list for that event is empty; other events' data unaffected.
